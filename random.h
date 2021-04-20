@@ -14,6 +14,6 @@ int generate_priority() {
 	return 1 + rand() % MAX_PRIORITY; 
 }
 
-int generate_arrival() {
-
-}
+// int generate_arrival() {
+// timeslice = scheduling period * (task's weight/total weight of tasks in the run queue');
+// }

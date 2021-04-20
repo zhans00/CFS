@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "process.h"
+#include "lib.h"
 
 #define RED 'R'
 #define BLACK 'B'
