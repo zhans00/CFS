@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     process procs[num_proc];
 
     for (int i = 0; i < num_proc; i++) {
-    	printf("Enter (in the corrrect order) priority, burst time, and arrival time for  process #%d:\n", i+1);
+    	printf("Enter (in the correct order) priority, burst time and arrival time for  process #%d:\n", i+1);
     	scanf("%d %d %d", &(procs[i].priority), &(procs[i].left_time), &(procs[i].start_time));
     }
 
