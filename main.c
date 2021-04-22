@@ -46,7 +46,6 @@ int main(int argc, char* argv[])
     }
 
     gclock clock;
-    clock.ticks = 0;
     process procs[num_proc];
 
     for (int i = 0; i < num_proc; i++) {
@@ -58,16 +57,19 @@ int main(int argc, char* argv[])
 
 
     qsort(procs, num_proc, sizeof(process), compare);
-    RBNode *tree = redBlackInsert(&root, &(procs[0]));
-    tree->vruntime = 7;
+    redBlackInsert(&root, &(procs[0]));
+    root->vruntime = 4;
+    clock.ticks = procs[0].start_time;
     RBNode *temp = redBlackInsert(&root, &(procs[1]));
+    delete(&root);
 
+    
 
 
     for (int i = 0; i < num_proc; i++) {
         printf("%d %d %d\n", procs[i].priority, procs[i].left_time, procs[i].start_time);
     }
 
-    printf("%d %d\n",temp->process->start_time, temp->vruntime);
+    printf("%d %d\n",root->process->start_time, root->vruntime);
     return 0;
 }

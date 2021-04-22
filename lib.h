@@ -163,9 +163,21 @@ RBNode* redBlackInsert(RBNode** T, process* p)
     redBlackInsertFixup(T, z);
 
     z->vruntime = (z->parent->vruntime)/2;
-    
+
     return z;
 }
+
+void delete(RBNode** T) {
+    RBNode* y =  &nil_leaf;
+    RBNode* x = *T;
+
+    // Find where to Insert new RBNode Z into the binary search tree
+    while (x->left != &nil_leaf) {
+        y = x;
+        x = x->left;
+    }
+    y->left = &nil_leaf;
+} 
 
 int compare(const void *s1, const void *s2)
 {
