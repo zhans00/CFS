@@ -34,10 +34,10 @@ typedef struct RBNode
 RBNode nil_leaf;
 
 // A utility function to create a new BST RBNode
-RBNode* newRBNode(process* p)
+RBNode* newRBNode(process* p, unsigned int vruntime)
 {
     RBNode *temp   = (RBNode*) malloc(sizeof(RBNode));
-    temp->vruntime = 0;
+    temp->vruntime = vruntime;
     temp->process = p;
     temp->color  = RED;
     temp->left   = NULL;
@@ -131,12 +131,33 @@ void redBlackInsertFixup(RBNode** root, RBNode* New)
     }
     root[0]->color = BLACK;
 }
-RBNode* redBlackInsert(RBNode** T, process* p)
+
+RBNode* left(RBNode* T) {
+    RBNode* temp = T;
+
+    while(temp->left != &nil_leaf){
+        temp = temp->left;
+    } 
+
+    return temp;
+} 
+
+    void rbTransplant(RBNode **root, RBNode* u, RBNode* v){
+        if (u->parent == &nil_leaf  ) {
+            *root = v;
+        } else if (u == u->parent->left){
+            u->parent->left = v;
+        } else {
+            u->parent->right = v;
+        }
+        v->parent = u->parent;
+    }
+RBNode* redBlackInsert(RBNode** T, process* p, unsigned int vruntime)
 {
-    RBNode* z =  newRBNode(p);
+    RBNode* z =  newRBNode(p, vruntime);
     RBNode* y =  &nil_leaf;
     RBNode* x = *T;
-
+    // printf("%d\n", p->start_time );
     // Find where to Insert new RBNode Z into the binary search tree
     while (x != &nil_leaf) {
         y = x;
@@ -159,25 +180,108 @@ RBNode* redBlackInsert(RBNode** T, process* p)
     z->right = &nil_leaf;
     z->color = RED;
 
+    if(z->vruntime == 0 && z->parent != &nil_leaf && z->parent != NULL) {
+        z->vruntime = (z->parent->vruntime)/2;
+    }
+
     // Ensure the Red-Black property is maintained
     redBlackInsertFixup(T, z);
-
-    z->vruntime = (z->parent->vruntime)/2;
 
     return z;
 }
 
-void delete(RBNode** T) {
-    RBNode* y =  &nil_leaf;
-    RBNode* x = *T;
 
-    // Find where to Insert new RBNode Z into the binary search tree
-    while (x->left != &nil_leaf) {
-        y = x;
-        x = x->left;
+
+void fixDelete(RBNode* x, RBNode** root) {
+        RBNode* s;
+        while (x != *root && x->color == 'B') {
+            if (x == x->parent->left) {
+                s = x->parent->right;
+                if (s->color == 'R') {
+                    // case 3.1
+                    s->color = 'B';
+                    x->parent->color = 'R';
+                    rotateLeft(root, x->parent);
+                    s = x->parent->right;
+                }
+
+                if (s->left->color == 'B' && s->right->color == 'B') {
+                    // case 3.2
+                    s->color = 'R';
+                    x = x->parent;
+                } else {
+                    if (s->right->color == 'B') {
+                        // case 3.3
+                        s->left->color = 'B';
+                        s->color = 'R';
+                        rotateRight(root, s);
+                        s = x->parent->right;
+                    } 
+
+                    // case 3.4
+                    s->color = x->parent->color;
+                    x->parent->color = 'B';
+                    s->right->color = 'B';
+                    rotateLeft(root, x->parent);
+                    x = *root;
+                }
+            } else {
+                s = x->parent->left;
+                if (s->color == 'R') {
+                    // case 3.1
+                    s->color = 'B';
+                    x->parent->color = 'R';
+                    rotateRight(root, x->parent);
+                    s = x->parent->left;
+                }
+
+                if (s->right->color == 'B' && s->right->color == 'B') {
+                    // case 3.2
+                    s->color = 'R';
+                    x = x->parent;
+                } else {
+                    if (s->left->color == 'B') {
+                        // case 3.3
+                        s->right->color = 'B';
+                        s->color = 'R';
+                        rotateLeft(root, s);
+                        s = x->parent->left;
+                    } 
+
+                    // case 3.4
+                    s->color = x->parent->color;
+                    x->parent->color = 'B';
+                    s->left->color = 'B';
+                    rotateRight(root, x->parent);
+                    x = *root;
+                }
+            } 
+        }
+        x->color = 'B';
     }
-    y->left = &nil_leaf;
-} 
+
+
+RBNode* delete(RBNode** node) {
+        // find the node containing key
+        RBNode* z = left(*node);
+        RBNode* x, *y;
+        RBNode* ans = z;
+        y = z;
+        char y_original_color = y->color;
+        if (z->left == &nil_leaf) {
+            // if(z->right == &nil_leaf || z->right == NULL){
+            //     z = &nil_leaf;
+            //     return ans;
+            // }
+            x = z->right;
+            rbTransplant(node, z, z->right);
+        }  
+        // free(z);
+        if (y_original_color == 'B'){
+            fixDelete(x, node);
+        }
+        return ans;
+    }
 
 int compare(const void *s1, const void *s2)
 {
@@ -209,12 +313,19 @@ int compare(const void *s1, const void *s2)
 // }
 
 // //中序遍历
-// void printTree(RBNode* root)
-// {
-//     if (root->left != &nil_leaf)
-//         printTree(root->left);
-//     printf("%d%c ", root->vruntime, root->color);
-//     if (root->right != &nil_leaf)
-//         printTree(root->right);
-// }
+void printTree(RBNode* root)
+{
+    if(root == &nil_leaf){
+        printf("empty\n");
+        return;
+    }
+
+    if (root->left != &nil_leaf)
+        printTree(root->left);
+    fprintf(stdout, "%d %d\n", root->process->left_time, root->process->start_time);
+    fflush(stdout);
+    // printf("%d%c ", root->vruntime, root->color);
+    if (root->right != &nil_leaf)
+        printTree(root->right);
+}
 

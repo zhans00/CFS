@@ -2,7 +2,7 @@
 #include <time.h>
 
 #define MAX_PRIORITY 99
-#define MAX_BURST 50
+#define MAX_BURST 500
 #define MAX_ARRIVAL 1000
 
 int generate_burst() {
