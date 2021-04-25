@@ -10,6 +10,7 @@ typedef struct process
     unsigned int start_time;
     unsigned int waiting_time;
     unsigned int response_time;
+    int preempted;
     int priority;
 
 } process;
@@ -287,6 +288,8 @@ int compare(const void *s1, const void *s2)
 {
     process *p1 = (process *)s1;
     process *p2 = (process *)s2;
+    if (p1->start_time == p2->start_time)
+        return p1->priority < p2->priority;
     return p1->start_time > p2->start_time;
 }
 
