@@ -10,6 +10,7 @@ typedef struct process
     unsigned int start_time;
     unsigned int waiting_time;
     unsigned int response_time;
+    bool runned;
     int preempted;
     int priority;
 

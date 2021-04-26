@@ -11,6 +11,7 @@
 int quantum;
 int start = 0;
 int end = 0;
+int num_proc;
 
 int get_pr(process procs[], int start, int end) {
     int sum = 0;
@@ -34,13 +35,26 @@ double get_weight(int prior) {
     return 45.0/prior;
 }
 
+void add_response(process procs[]) {
+    for (int i = start; i < end; ++i) {
+        if(!(&procs[i])->runned){
+            (&procs[i])->response_time +=1;
+        }
+    }
+}
+
+void add_wait(process procs[]) {
+    for (int i = start; i < end; ++i) {
+        (&procs[i])->waiting_time +=1;
+    }
+}
+
 
 int main(int argc, char* argv[])
 {
 
     RBNode *root = &nil_leaf;
     srand ( time(NULL) );
-	int num_proc;
 
     if(argc > 1) {
     	num_proc = atoi(argv[1]);
@@ -52,19 +66,23 @@ int main(int argc, char* argv[])
 
     gclock clock;
     process procs[num_proc];
+    bool reinsert;
 
     printf("**************************************\n");
-    printf("            Processes list.\n");
+    printf("*           Processes list.          *\n");
     printf("**************************************\n\n");
 
     for (int i = 0; i < num_proc; i++) {
-        procs[i].priority = generate_priority();
-        procs[i].left_time = generate_burst();
-        procs[i].start_time = generate_arrival();
+        // procs[i].priority = generate_priority();
+        // procs[i].left_time = generate_burst();
+        // procs[i].start_time = generate_arrival();
         procs[i].preempted = 0;
-        // procs[i].priority = pr[i];
-        // procs[i].left_time = burst[i];
-        // procs[i].start_time = arr[i];
+        procs[i].response_time = 0;
+        procs[i].waiting_time = 0;
+        procs[i].runned = false;
+        procs[i].priority = 1;
+        procs[i].left_time = 1;
+        procs[i].start_time = 1;
     }
 
     qsort(&procs, num_proc, sizeof(process), compare);
@@ -73,26 +91,28 @@ int main(int argc, char* argv[])
     }
 
     quantum = get_q(procs,num_proc);
-    clock.ticks = procs[0].start_time;
+    printf("q: %d\n",quantum );
+    clock.ticks = 0;
     bool finished = false;
 
-    redBlackInsert(&root, &(procs[0]), 0);
-    end +=1;
+    // redBlackInsert(&root, &(procs[0]), 0);
+    // end +=1;
 
     while(!finished) {
         while (end < num_proc && clock.ticks == procs[end].start_time) {
             RBNode* t = redBlackInsert(&root, &(procs[end]), 0);
             end +=1;
         }
-        clock.ticks +=1;
-        if(root != &nil_leaf){
+        if(root == &nil_leaf)
+            clock.ticks +=1;
+        else {
         RBNode* temp = delete(&root);
         RBNode temp2 = *temp;
         int timeslice = get_timeslice(temp->process->priority, procs);
         int release;
-        bool reinsert = false;
+        temp->process->runned = true;
         if (temp->process->left_time <= timeslice) {
-            release = clock.ticks + temp->process->left_time - 1;
+            release = clock.ticks + temp->process->left_time;
             temp->vruntime += (temp->process->left_time*get_weight(temp->process->priority));
             temp->process->left_time = 0;
             start +=1;
@@ -103,32 +123,32 @@ int main(int argc, char* argv[])
             reinsert = false;
 
         } else {
-            release = clock.ticks + timeslice - 1;
+            release = clock.ticks + timeslice;
             temp->process->left_time -= timeslice;
             temp->vruntime += (timeslice*get_weight(temp->process->priority));
             reinsert = true;
             temp->process->preempted +=1;
         }
+        printf("%d %d\n",clock.ticks, release );
         while(clock.ticks != release) {
+            add_response(procs);
+            add_wait(procs);
             while (end < num_proc && clock.ticks == procs[end].start_time) {
-                RBNode *t = redBlackInsert(&root, &(procs[end]), 0);
-                // printf("inserted: %d", t->process->start_time);
-                end +=1;
+                    redBlackInsert(&root, &(procs[end]), 0);
+                    end +=1;
             }
             clock.ticks +=1;
         }
         if (reinsert){
             redBlackInsert(&root, (temp2.process), temp2.vruntime);
         }
-        // printTree(root);
-        // printf("\n");
     }
 }
 
 
 
     for (int i = 0; i < num_proc; i++) {
-        printf("%d %d %d\n", procs[i].priority, procs[i].preempted, procs[i].start_time);
+        printf("%d(PR) %d(P) %d(S) %d(R)\n", procs[i].priority, procs[i].preempted, procs[i].start_time, procs[i].response_time);
     }
     return 0;
 }
