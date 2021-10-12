@@ -1,5 +1,7 @@
 # CFS
 
+A simple simulator of Completely Fair Scheduler (CFS). CFS is is the default scheduler of the Linux kernel tasks of the SCHED_NORMAL class (i.e., tasks that have no real-time execution constraints).
+
 ## How to run:
     1) to generate random values, provide the number of processes as argument. 
         For example, $ gcc main.c -o main.out
