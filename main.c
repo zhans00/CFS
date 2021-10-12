@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
-#include "lib.h"
+#include <unistd.h>
 #include <stdio.h>
 #include "read_file.h"
 
@@ -37,7 +37,7 @@
 #define MAX_BURST 300
 #define MAX_ARRIVAL 2000
 
-int quantum;
+unsigned int quantum;
 
 /* start and end define the range of runnables processes*/ 
 int start = 0;
@@ -130,7 +130,7 @@ void run_processes(process procs[]) {
     while(!finished) {
         /* add processes into the tree, if their arrival time == current clock tick */
         while (end < num_proc && g_clock.ticks == procs[end].start_time) {
-            RBNode* t = RB_insert(&root, &(procs[end]), 0);
+            RB_insert(&root, &(procs[end]), 0);
             end +=1;
         }
 
@@ -197,6 +197,7 @@ void run_processes(process procs[]) {
 
 int main(int argc, char* argv[]) {
     bool file = false;
+    int opt;
 
     /* checking the validity of comman line arguments */
     if(argc == 2) {
@@ -205,13 +206,23 @@ int main(int argc, char* argv[]) {
             printf("Invalid number of processes.\n");
             return 1;
         }
-    } else if (argc == 3){
-        file = true;
-        if (access(argv[2], F_OK) != 0){
-            printf("File does not exist.\n");
-            return 1;
+    } else if (argc == 3) {
+        while ((opt = getopt(argc, argv, "f:")) != -1) {
+            switch (opt) {
+            case 'f':
+                file = true;
+
+                if (access(argv[2], F_OK) != 0){
+                    printf("File does not exist.\n");
+                    return 1;
+                }
+                num_proc = get_num_proc(argv[2]);
+		break;
+            default:
+                printf("Invalid option\n");
+                return 1;
+            }
         }
-        num_proc = get_num_proc(argv[2]);
     } else {
     	printf("Invalid number of processes.\n");
     	return 1;

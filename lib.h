@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-#define RED RED
-#define BLACK BLACK
+#define RED 'R'
+#define BLACK 'B'
 
 typedef struct process {
     unsigned int left_time; // how much time it needs to run more
